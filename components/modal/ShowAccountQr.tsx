@@ -14,10 +14,10 @@ import { Account } from "@/app/(protected)/home/page";
 interface ShowAccountQrProps {
     account: Account | null;
     open: boolean;
-    onClose: (state: boolean) => void;
+    onCloseAction: (state: boolean) => void;
 }
 
-export function ShowAccountQr({ account, open, onClose }: ShowAccountQrProps) {
+export function ShowAccountQr({ account, open, onCloseAction }: ShowAccountQrProps) {
     const { Canvas } = useQRCode();
 
     if (!account) return null;
@@ -57,11 +57,11 @@ export function ShowAccountQr({ account, open, onClose }: ShowAccountQrProps) {
     }
 
     return (
-        <Dialog open={open} onOpenChange={onClose}>
+        <Dialog open={open} onOpenChange={onCloseAction}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Comparte este QR</DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription className="flex justify-center">
                         <Canvas
                             text={formattedAccount}
                             options={{ width: 256 }}
