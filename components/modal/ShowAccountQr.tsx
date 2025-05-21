@@ -47,7 +47,9 @@ export function ShowAccountQr({ account, open, onCloseAction }: ShowAccountQrPro
         if (!canvas) return;
         const url = canvas.toDataURL("image/png");
         const blob = new Blob([url], { type: "image/png" });
+        console.log(blob);
         const file = new File([blob], "qr.png", { type: "image/png" });
+        console.log(file);
         const shareData = {
             title: "Comparte este QR",
             text: "Comparte este QR",

@@ -5,7 +5,7 @@ import {NewAccountForm} from "@/components/NewAccountForm";
 interface AddOwnAccountProps {
     open: boolean;
     onCloseAction: (state: boolean) => void;
-    onSaveAction: (state: boolean) => void;
+    onSaveAction: () => void;
 }
 
 export default function AddOwnAccount({ open, onCloseAction, onSaveAction}: AddOwnAccountProps) {
@@ -15,7 +15,7 @@ export default function AddOwnAccount({ open, onCloseAction, onSaveAction}: AddO
                 <DialogHeader>
                     <DialogTitle className="mb-2">Nueva Cuenta</DialogTitle>
 
-                        <NewAccountForm submitAction={() => onSaveAction} />
+                        <NewAccountForm submitAction={() => onSaveAction()} />
                 </DialogHeader>
 
             </DialogContent>
