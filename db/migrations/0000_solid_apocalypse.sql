@@ -1,6 +1,6 @@
 CREATE TYPE "public"."accountType" AS ENUM('vista', 'corriente', 'ahorro');--> statement-breakpoint
 CREATE TABLE "accounts" (
-	"id" serial NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar NOT NULL,
 	"rut" varchar NOT NULL,
 	"bank" varchar NOT NULL,

@@ -31,7 +31,7 @@ export default function RootLayout({
                 <div className="min-h-dvh grid grid-rows-(--grid-template)">
                     {children}
                 </div>
-                <Toaster richColors />
+                <Toaster richColors position="top-right"/>
             </Providers>
             </body>
             </html>

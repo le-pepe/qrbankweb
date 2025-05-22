@@ -1,37 +1,19 @@
 "use client";
 
 import {useEffect, useState} from 'react';
-import {Button} from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-    Loader2, Trash2,
-    Eye,    // Para el botón de modal en la tarjeta
-    ArrowDownToLine, // Para el botón de importar en la tarjeta
-    FilePlus2,       // Para el FAB de "Nuevo Dato Propio"
-    UploadCloud,     // Para el FAB de "Importar Externo"
-    // Edit3,        // Opcional, si quieres más acciones en tarjeta
-    // Trash2        // Opcional, si quieres más acciones en tarjeta
-} from "lucide-react";
-import {ModeToggle} from "@/components/ModeToggle";
-import {deleteOwnAccountById, getExternalAccounts, getOwnAccounts} from "@/lib/actions";
-import {ShowAccountQr} from "@/components/modal/ShowAccountQr";
-import AddOwnAccount from "@/components/modal/AddOwnAccount";
 import {SignedIn, SignedOut, SignInButton, SignUpButton, UserButton} from "@clerk/nextjs";
-import {SwipeTabsWrapper} from "@/app/(protected)/home/SwipeTabsWrapper";
-import {Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle} from "@/components/ui/dialog";
+import {Copy, Eye, FilePlus2, Loader2, Trash2, UploadCloud} from "lucide-react";
+
+import {Button} from "@/components/ui/button";
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import {ModeToggle} from "@/components/ModeToggle";
+import AddOwnAccount from "@/components/modal/AddOwnAccount";
+import DeleteQr from "@/components/modal/DeleteQr";
+import ScanQR from "@/components/modal/ScanQR";
+import ShowAccountQr from "@/components/modal/ShowAccountQr";
+import {deleteOwnAccountById, getExternalAccounts, getOwnAccounts} from "@/lib/actions";
+import {toast} from "sonner";
 
 
 export interface Account {
@@ -58,6 +40,7 @@ export default function HomePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [showConfirmDelete, setShowConfirmDelete] = useState<null | number>(null); // id de cuenta a eliminar, o null
     const [isDeletingId, setIsDeletingId] = useState<number | null>(null);
+    const [showScanQrModal, setShowScanQrModal] = useState<boolean>(false);
 
     useEffect(() => {
         Promise.all([getOwnAccounts(), getExternalAccounts()]).then(
@@ -74,6 +57,7 @@ export default function HomePage() {
             .then(() => {
                 setIsLoading(true)
                 getOwnAccounts().then(setMyAccounts).finally(() => setIsLoading(false))
+                getExternalAccounts().then(setExternalAccounts).finally(() => setIsLoading(false))
             })
             .catch(err => {
                 console.error(err)
@@ -85,12 +69,38 @@ export default function HomePage() {
     }
 
     function handleAddAccount() {
+        toast.success("Cuenta agregada correctamente");
         setIsLoading(true)
         getOwnAccounts().then(setMyAccounts).finally(() => setIsLoading(false))
         setShowAddAccountModal(false)
     }
 
-    // Componente para el Botón de Acción Flotante (FAB)
+    function handleScanSaveAction() {
+        setIsLoading(true)
+        getExternalAccounts().then(setExternalAccounts).finally(() => setIsLoading(false))
+    }
+
+    function copyToClipboard(account: Account) {
+        const formattedAccount = [
+            `Nombre: ${account.name}`,
+            `Rut: ${account.rut}`,
+            `Email: ${account.email}`,
+            `Banco: ${account.bank}`,
+            `Tipo de cuenta: ${account.accountType}`,
+            `Número de cuenta: ${account.accountNumber}`,
+            `Alias: ${account.alias?? "N/A"}`,
+        ].join("\n");
+
+        navigator.clipboard.writeText(formattedAccount)
+            .then(() => {
+                toast.success("Datos copiados al portapapeles");
+            })
+            .catch((err) => {
+                toast.error("Error al copiar");
+                console.error("Error al copiar: ", err);
+            });
+    }
+
     const FabButton = () => {
         if (activeTab === "myAccounts") {
             return (
@@ -107,6 +117,7 @@ export default function HomePage() {
         if (activeTab === "externalAccounts") {
             return (
                 <Button
+                    onClick={() => setShowScanQrModal(true)}
                     className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-xl z-50 flex items-center justify-center p-0 bg-accent text-accent-content"
                     aria-label="Importar nuevo dato externo"
                     title="Importar nuevo dato externo"
@@ -154,157 +165,183 @@ export default function HomePage() {
                 <h1 className="text-3xl font-bold mb-6 text-center text-gray-800 dark:text-gray-100">
                     Gestión de Datos
                 </h1>
-                <SwipeTabsWrapper
-                    onSwipeLeft={() => setActiveTab((prev) => (prev === "myAccounts" ? "externalAccounts" : prev))}
-                    onSwipeRight={() => setActiveTab((prev) => (prev === "externalAccounts" ? "myAccounts" : prev))}
-                >
-                    <Tabs defaultValue="myAccounts" onValueChange={setActiveTab} className="w-full">
-                        {/* Hacemos la lista de pestañas "sticky" para que se mantenga visible al hacer scroll */}
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="myAccounts" className="cursor-pointer">Mis Cuentas</TabsTrigger>
-                            <TabsTrigger value="externalAccounts" className="cursor-pointer">Otras Cuentas</TabsTrigger>
-                        </TabsList>
 
-                        {/* Contenido de la Pestaña "Mis Datos Propios" */}
-                        <TabsContent value="myAccounts">
-                            <div className="space-y-4"> {/* Usamos space-y para espaciar las tarjetas verticalmente */}
-                                {isLoading
-                                    ? Array.from({length: 1}).map((_, i) => <AccountCardSkeleton key={i}/>)
-                                    : myAccounts.length > 0
-                                        ? myAccounts.map((account) => (
-                                                <Card
-                                                    key={account.id}
-                                                    className="w-full shadow-md hover:shadow-lg transition-shadow duration-300 dark:bg-gray-800"
-                                                >
-                                                    <CardHeader>
-                                                        <CardTitle className="text-lg text-blue-600 dark:text-blue-400">
-                                                            {account.name}
-                                                        </CardTitle>
-                                                        <CardDescription
-                                                            className="text-sm text-gray-600 dark:text-gray-400">
-                                                            {account.bank} • {account.accountType}
-                                                        </CardDescription>
-                                                    </CardHeader>
+                <Tabs defaultValue="myAccounts" onValueChange={setActiveTab} className="w-full">
+                    {/* Hacemos la lista de pestañas "sticky" para que se mantenga visible al hacer scroll */}
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="myAccounts" className="cursor-pointer">Mis Cuentas</TabsTrigger>
+                        <TabsTrigger value="externalAccounts" className="cursor-pointer">Otras Cuentas</TabsTrigger>
+                    </TabsList>
 
-                                                    <CardContent
-                                                        className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                    {/* Contenido de la Pestaña "Mis Datos Propios" */}
+                    <TabsContent value="myAccounts">
+                        <div className="space-y-4"> {/* Usamos space-y para espaciar las tarjetas verticalmente */}
+                            {isLoading
+                                ? Array.from({length: 1}).map((_, i) => <AccountCardSkeleton key={i}/>)
+                                : myAccounts.length > 0
+                                    ? myAccounts.map((account) => (
+                                            <Card
+                                                key={account.id}
+                                                className="w-full shadow-md hover:shadow-lg transition-shadow duration-300 dark:bg-gray-800"
+                                            >
+                                                <CardHeader>
+                                                    <CardTitle className="text-lg text-blue-600 dark:text-blue-400">
+                                                        {account.name}
+                                                    </CardTitle>
+                                                    <CardDescription
+                                                        className="text-sm text-gray-600 dark:text-gray-400">
+                                                        {account.bank} • {account.accountType}
+                                                    </CardDescription>
+                                                </CardHeader>
+
+                                                <CardContent className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                                                    <div>
+                                                        <strong>N° Cuenta:</strong> {account.accountNumber}
+                                                    </div>
+                                                    {account.alias && (
                                                         <div>
-                                                            <strong>N° Cuenta:</strong> {account.accountNumber}
+                                                            <strong>Alias:</strong> {account.alias}
                                                         </div>
-                                                        {account.alias && (
-                                                            <div>
-                                                                <strong>Alias:</strong> {account.alias}
-                                                            </div>
-                                                        )}
+                                                    )}
+                                                    <div>
+                                                        <strong>RUT:</strong> {account.rut}
+                                                    </div>
+                                                    {account.email && (
                                                         <div>
-                                                            <strong>RUT:</strong> {account.rut}
+                                                            <strong>Email:</strong> {account.email}
                                                         </div>
-                                                        {account.email && (
-                                                            <div>
-                                                                <strong>Email:</strong> {account.email}
-                                                            </div>
-                                                        )}
-                                                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                                                            Creado:{" "}
-                                                            {new Date(account.created_at).toLocaleDateString("es-CL", {
-                                                                year: "numeric",
-                                                                month: "short",
-                                                                day: "numeric",
-                                                            })}
-                                                        </p>
-                                                    </CardContent>
-
-                                                    <CardFooter className="flex justify-end pt-4 gap-2">
-                                                        <Button
-                                                            variant="destructive"
-                                                            className="flex gap-2 items-center"
-                                                            disabled={isDeletingId === account.id}
-                                                            onClick={() => setShowConfirmDelete(account.id)}
-                                                            title="Eliminar cuenta"
-
-                                                            size="sm"
-                                                        >
-                                                            {isDeletingId === account.id && <Loader2 className="animate-spin" size={16} />}
-                                                            <Trash2 size={16} />
-                                                            Eliminar
-                                                        </Button>
-                                                        <Button
-                                                            onClick={() => setSelectedAccount(account)}
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
-                                                        >
-                                                            <Eye className="size-4 mr-2"/>
-                                                            Ver QR
-                                                        </Button>
-
-                                                    </CardFooter>
-                                                </Card>
-                                            )
-                                        ) : (
-                                            <div className="text-center py-10">
-                                                <p className="text-gray-500 dark:text-gray-400">No tienes datos propios
-                                                    todavía.</p>
-                                                <Button
-                                                    className="mt-4" variant="outline">
-                                                    <FilePlus2 className="mr-2 h-4 w-4"/> Crear mi primer dato
-                                                </Button>
-                                            </div>
-                                        )}
-                            </div>
-                        </TabsContent>
-
-                        {/* Contenido de la Pestaña "Importar Datos" */}
-                        <TabsContent value="externalAccounts">
-                            <div className="space-y-4">
-                                {externalAccounts.length > 0 ? (
-                                    externalAccounts.map((account) => (
-                                        <Card key={account.id}
-                                              className="w-full shadow-md hover:shadow-lg transition-shadow duration-300 dark:bg-gray-800">
-                                            <CardHeader>
-                                                <CardTitle
-                                                    className="text-lg text-green-600 dark:text-green-400">{account.name}</CardTitle>
-                                                <CardDescription className="text-sm text-gray-600 dark:text-gray-400">
-                                                    Origen: {account.bank}
-                                                </CardDescription>
-                                            </CardHeader>
-                                            {account.created_at && (
-                                                <CardContent>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-500">
-                                                        Última
-                                                        importación: {new Date(account.created_at).toLocaleDateString('es-CL', {
-                                                        year: 'numeric',
-                                                        month: 'short',
-                                                        day: 'numeric'
-                                                    })}
+                                                    )}
+                                                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                                                        Creado:{" "}
+                                                        {new Date(account.created_at).toLocaleDateString("es-CL", {
+                                                            year: "numeric",
+                                                            month: "short",
+                                                            day: "numeric",
+                                                        })}
                                                     </p>
                                                 </CardContent>
+
+                                                <CardFooter className="flex justify-end pt-4 gap-2">
+                                                    <Button
+                                                        variant="destructive"
+                                                        className="flex gap-2 items-center"
+                                                        disabled={isDeletingId === account.id}
+                                                        onClick={() => setShowConfirmDelete(account.id)}
+                                                        title="Eliminar cuenta"
+
+                                                        size="sm"
+                                                    >
+                                                        {isDeletingId === account.id &&
+                                                            <Loader2 className="animate-spin" size={16}/>}
+                                                        <Trash2 size={16}/>
+                                                        Eliminar
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => setSelectedAccount(account)}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+                                                    >
+                                                        <Eye className="size-4 mr-2"/>
+                                                        Ver QR
+                                                    </Button>
+
+                                                </CardFooter>
+                                            </Card>
+                                        )
+                                    ) : (
+                                        <div className="text-center py-10">
+                                            <p className="text-gray-500 dark:text-gray-400">No tienes datos propios
+                                                todavía.</p>
+                                            <Button
+                                                className="mt-4" variant="outline">
+                                                <FilePlus2 className="mr-2 h-4 w-4"/> Crear mi primer dato
+                                            </Button>
+                                        </div>
+                                    )}
+                        </div>
+                    </TabsContent>
+
+                    {/* Contenido de la Pestaña "Importar Datos" */}
+                    <TabsContent value="externalAccounts">
+                        <div className="space-y-4">
+                            {externalAccounts.length > 0 ? (
+                                externalAccounts.map((account) => (
+                                    <Card key={account.id}
+                                          className="w-full shadow-md hover:shadow-lg transition-shadow duration-300 dark:bg-gray-800">
+                                        <CardHeader>
+                                            <CardTitle className="text-lg text-green-600 dark:text-green-400">
+                                                {account.name}
+                                            </CardTitle>
+                                            <CardDescription className="text-sm text-gray-600 dark:text-gray-400">
+                                                {account.bank} • {account.accountType}
+                                            </CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="space-y-1 text-sm">
+                                            <div>
+                                                <strong>N° Cuenta:</strong> {account.accountNumber}
+                                            </div>
+                                            {account.alias && (
+                                                <div>
+                                                    <strong>Alias:</strong> {account.alias}
+                                                </div>
                                             )}
-                                            <CardFooter className="flex justify-end pt-4">
-                                                <Button
-                                                    size="sm"
-                                                    className="bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700"
-                                                >
-                                                    <ArrowDownToLine className="mr-2 h-4 w-4"/>
-                                                    Importar este dato
-                                                </Button>
-                                            </CardFooter>
-                                        </Card>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-10">
-                                        <p className="text-gray-500 dark:text-gray-400">No hay datos disponibles para
-                                            importar en este momento.</p>
-                                        <Button
-                                            className="mt-4" variant="outline">
-                                            <UploadCloud className="mr-2 h-4 w-4"/> Buscar datos para importar
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        </TabsContent>
-                    </Tabs>
-                </SwipeTabsWrapper>
+                                            <div>
+                                                <strong>RUT:</strong> {account.rut}
+                                            </div>
+                                            {account.email && (
+                                                <div>
+                                                    <strong>Email:</strong> {account.email}
+                                                </div>
+                                            )}
+                                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                                                Creado:{" "}
+                                                {new Date(account.created_at).toLocaleDateString("es-CL", {
+                                                    year: "numeric",
+                                                    month: "short",
+                                                    day: "numeric",
+                                                })}
+                                            </p>
+                                        </CardContent>
+                                        <CardFooter className="flex justify-end pt-4 gap-2">
+                                            <Button
+                                                variant="destructive"
+                                                className="flex gap-2 items-center"
+                                                disabled={isDeletingId === account.id}
+                                                onClick={() => setShowConfirmDelete(account.id)}
+                                                title="Eliminar cuenta"
+                                                size="sm"
+                                            >
+                                                {isDeletingId === account.id &&
+                                                    <Loader2 className="animate-spin" size={16}/>}
+                                                <Trash2 size={16}/>
+                                                Eliminar
+                                            </Button>
+                                            <Button
+                                                onClick={() => copyToClipboard(account)}
+                                                size="sm"
+                                                className="bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700"
+                                            >
+                                                <Copy className="size-4"/>
+                                                Copiar Datos
+                                            </Button>
+                                        </CardFooter>
+                                    </Card>
+                                ))
+                            ) : (
+                                <div className="text-center py-10">
+                                    <p className="text-gray-500 dark:text-gray-400">No hay datos disponibles para
+                                        importar en este momento.</p>
+                                    <Button
+                                        onClick={() => setShowScanQrModal(true)}
+                                        className="mt-4" variant="outline">
+                                        <UploadCloud className="mr-2 h-4 w-4"/> Buscar datos para importar
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </TabsContent>
+                </Tabs>
 
                 {/* Botón Flotante que cambia según la pestaña activa */}
                 <FabButton/>
@@ -314,30 +351,14 @@ export default function HomePage() {
                 <AddOwnAccount open={showAddAccountModal} onCloseAction={setShowAddAccountModal}
                                onSaveAction={() => handleAddAccount()}/>
 
-                <Dialog open={!!showConfirmDelete} onOpenChange={(val) => !val && setShowConfirmDelete(null)}>
-                    <DialogContent className="max-w-sm rounded-lg">
-                        <DialogTitle>¿Eliminar cuenta?</DialogTitle>
-                        <DialogDescription>
-                            ¿Estás seguro de que quieres eliminar esta cuenta? Esta acción no se puede deshacer.
-                        </DialogDescription>
-                        <DialogFooter>
-                            <Button
-                                variant="destructive"
-                                onClick={() => handleDeleteAccount(showConfirmDelete!)}
-                                disabled={isDeletingId !== null}
-                            >
-                                {isDeletingId !== null
-                                    ? (<><Loader2 className="animate-spin mr-2" size={16} /> Eliminando...</>)
-                                    : "Eliminar"}
-                            </Button>
-                            <DialogClose asChild>
-                                <Button variant="outline" disabled={isDeletingId !== null}>
-                                    Cancelar
-                                </Button>
-                            </DialogClose>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                <DeleteQr
+                    showConfirmDelete={showConfirmDelete}
+                    setShowConfirmDelete={setShowConfirmDelete}
+                    handleDeleteAccount={handleDeleteAccount}
+                    isDeletingId={isDeletingId}
+                />
+
+                <ScanQR isOpen={showScanQrModal} setOpenAction={setShowScanQrModal} onSaveAction={handleScanSaveAction}/>
 
 
             </main>

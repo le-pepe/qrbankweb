@@ -3,7 +3,7 @@ import {boolean, index, pgEnum, pgTable, serial, text, timestamp, varchar} from 
 export const accountType = pgEnum('accountType', ['vista', 'corriente', 'ahorro'])
 
 export const accounts = pgTable('accounts', {
-    id: serial(),
+    id: serial().primaryKey(),
     name: varchar().notNull(),
     rut: varchar().notNull(),
     bank: varchar().notNull(),

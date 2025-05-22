@@ -25,7 +25,23 @@ export async function createOwnAccount(account: any) {
 }
 
 export async function createExternalAccount(account: any) {
+    const { userId} = await auth()
     account.isMine = false;
+    account.userId = userId
+
+    const res = await db.query.accounts.findFirst({
+        where: and(
+            eq(accounts.rut, account.rut),
+            eq(accounts.bank, account.bank),
+            eq(accounts.accountType, account.accountType),
+            eq(accounts.accountNumber, account.accountNumber),
+            eq(accounts.isMine, false)
+        )
+    })
+    if (res) {
+        throw new Error("La cuenta ya existe")
+    }
+
     await db.insert(accounts).values(account)
 }
 
@@ -35,7 +51,7 @@ export async function getOwnAccounts() {
 }
 
 export async function getExternalAccounts() {
-    return await db.select().from(accounts).where(eq(accounts.isMine, false))
+    return db.select().from(accounts).where(eq(accounts.isMine, false))
 }
 
 export async function deleteOwnAccountById(accountId: number) {

@@ -1,5 +1,5 @@
 'use client'
-import React from "react";
+import React, {useEffect, useState} from "react";
 import { useQRCode } from "next-qrcode";
 import {
     Dialog,
@@ -17,7 +17,38 @@ interface ShowAccountQrProps {
     onCloseAction: (state: boolean) => void;
 }
 
-export function ShowAccountQr({ account, open, onCloseAction }: ShowAccountQrProps) {
+export default function ShowAccountQr({ account, open, onCloseAction }: ShowAccountQrProps) {
+
+    const [canDownload, setCanDownload] = useState(false);
+
+    useEffect(() => {
+        const prepareFileAndCheckShareability = async () => {
+            const canvas = document.querySelector("canvas") as HTMLCanvasElement | null;
+            if (!canvas) {
+                setCanDownload(false);
+                return;
+            }
+
+            const dataUrl = canvas.toDataURL("image/png");
+
+            try {
+                const response = await fetch(dataUrl);
+                const blob = await response.blob();
+                const file = new File([blob], "qr.png", { type: "image/png" });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    setCanDownload(true);
+                } else {
+                    setCanDownload(false);
+                }
+            } catch (error) {
+                console.error("Error al procesar el canvas para compartir:", error);
+                setCanDownload(false);
+            }
+        };
+
+        prepareFileAndCheckShareability().then();
+    }, []);
     const { Canvas } = useQRCode();
 
     if (!account) return null;
@@ -63,15 +94,15 @@ export function ShowAccountQr({ account, open, onCloseAction }: ShowAccountQrPro
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Comparte este QR</DialogTitle>
-                    <DialogDescription className="flex justify-center">
-                        <Canvas
-                            text={formattedAccount}
-                            options={{ width: 256 }}
-                        />
-                    </DialogDescription>
                 </DialogHeader>
+                <div className="flex justify-center">
+                    <Canvas
+                        text={formattedAccount}
+                        options={{ width: 256 }}
+                    />
+                </div>
                 <DialogFooter>
-                    <Button variant="ghost" onClick={handleShare}>Compartir</Button>
+                    {canDownload && <Button variant="ghost" onClick={handleShare}>Compartir</Button>}
                     <Button onClick={handleDownload}>Descargar QR</Button>
                 </DialogFooter>
             </DialogContent>
