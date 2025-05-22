@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from 'react';
 import {SignedIn, SignedOut, SignInButton, SignUpButton, UserButton} from "@clerk/nextjs";
-import {Copy, Eye, FilePlus2, Loader2, Trash2, UploadCloud} from "lucide-react";
+import {Copy, Eye, FilePlus2, Loader2, QrCode, Trash2, UploadCloud} from "lucide-react";
 
 import {Button} from "@/components/ui/button";
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
@@ -14,6 +14,7 @@ import ScanQR from "@/components/modal/ScanQR";
 import ShowAccountQr from "@/components/modal/ShowAccountQr";
 import {deleteOwnAccountById, getExternalAccounts, getOwnAccounts} from "@/lib/actions";
 import {toast} from "sonner";
+import Link from "next/link";
 
 
 export interface Account {
@@ -148,18 +149,26 @@ export default function HomePage() {
 
     return (
         <>
-            <header className="flex items-center justify-end m-2">
-                <div className="flex gap-4 items-center">
-                    <ModeToggle/>
-                    <SignedOut>
-                        <SignInButton/>
-                        <SignUpButton/>
-                    </SignedOut>
-                    <SignedIn>
-                        <UserButton/>
-                    </SignedIn>
+            <nav className="bg-background border-b sticky top-0 w-full z-50">
+                <div className="w-full flex justify-between items-center py-4 px-6">
+                    <div>
+                        <Link href="/" className="flex items-center space-x-2">
+                            <QrCode className="text-primary h-6 w-6" />
+                            <span className="text-xl font-bold">BanQR</span>
+                        </Link>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                        <ModeToggle />
+                        <SignedOut>
+                            <SignInButton/>
+                            <SignUpButton/>
+                        </SignedOut>
+                        <SignedIn>
+                            <UserButton/>
+                        </SignedIn>
+                    </div>
                 </div>
-            </header>
+            </nav>
             <main
                 className="container mx-auto p-4 sm:p-6 md:p-8 max-w-3xl"> {/* max-w-3xl para mejor lectura en desktop, en móvil será full width */}
                 <h1 className="text-3xl font-bold mb-6 text-center text-gray-800 dark:text-gray-100">

@@ -113,6 +113,9 @@
   --sidebar-ring: oklch(0.527 0.154 150.069);
 }
 
+html {
+  scroll-behavior: smooth;
+}
 
 @layer base {
   * {

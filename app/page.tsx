@@ -1,109 +1,266 @@
-import Image from "next/image";
-import {ModeToggle} from "@/components/ModeToggle";
+"use client";
+
+import { useState } from 'react';
+import { FilePlus2, UploadCloud, UserCircle2, RefreshCw, QrCode, Shield, Smartphone, Moon } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ModeToggle } from "@/components/ModeToggle";
+import {SignedIn, SignedOut, SignInButton, SignUpButton, UserButton} from "@clerk/nextjs";
+import Link from "next/link";
 
 export default function LandingPage() {
-  return (
-      <>
-        <header>
-          <ModeToggle />
-        </header>
-        <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-          <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-            <Image
-                className="dark:invert"
-                src="/next.svg"
-                alt="Next.js logo"
-                width={180}
-                height={38}
-                priority
-            />
-            <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-              <li className="mb-2 tracking-[-.01em]">
-                Get started by editing{" "}
-                <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-                  app/page.tsx
-                </code>
-                .
-              </li>
-              <li className="tracking-[-.01em]">
-                Save and see your changes instantly.
-              </li>
-            </ol>
+  const [activeTab, setActiveTab] = useState("features");
 
-            <div className="flex gap-4 items-center flex-col sm:flex-row">
-              <a
-                  className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-                  href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-              >
-                <Image
-                    className="dark:invert"
-                    src="/vercel.svg"
-                    alt="Vercel logomark"
-                    width={20}
-                    height={20}
-                />
-                Deploy now
-              </a>
-              <a
-                  className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-                  href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-              >
-                Read our docs
-              </a>
+  return (
+      <div className="min-h-screen flex flex-col w-full">
+        {/* Navbar */}
+        <nav className="bg-background border-b sticky top-0 w-full z-50">
+          <div className="w-full flex justify-between items-center py-4 px-6">
+            <div className="flex items-center space-x-2">
+              <div>
+                <Link href="/" className="flex items-center space-x-2">
+                  <QrCode className="text-primary h-6 w-6" />
+                  <span className="text-xl font-bold">BanQR</span>
+                </Link>
+              </div>
             </div>
-          </main>
-          <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-            <a
-                className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-                href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-              <Image
-                  aria-hidden
-                  src="/file.svg"
-                  alt="File icon"
-                  width={16}
-                  height={16}
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" asChild>
+                <Link href="/#features">Características</Link>
+              </Button>
+              <Button variant="ghost" asChild>
+                <Link href="/#how-it-works">Cómo funciona</Link>
+              </Button>
+              <ModeToggle />
+              <SignedOut>
+                <SignInButton>
+                  <Button>Iniciar Sesión</Button>
+                </SignInButton>
+                <SignUpButton>
+                  <Button variant="secondary">Crear cuenta</Button>
+                </SignUpButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton/>
+              </SignedIn>
+            </div>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <section className="bg-gradient-to-br from-primary to-accent text-white py-20 w-full">
+          <div className="container px-6 text-center mx-auto">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">Gestiona tus cuentas bancarias fácilmente</h1>
+            <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto opacity-90 text-pretty">
+              Almacena, comparte y administra tus datos bancarios de forma segura con tecnología QR
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button className="px-8 py-6 text-lg" asChild>
+                <Link href="/home">Comenzar</Link>
+              </Button>
+            </div>
+            <div className="mt-16 bg-background rounded-xl shadow-xl max-w-4xl mx-auto overflow-hidden">
+              <div className="w-full h-80 bg-muted flex items-center justify-center">
+                <span className="text-muted-foreground">App Preview</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Main Content */}
+        <main className="flex-1">
+          {/* Features Section */}
+          <section id="features" className="py-20 bg-muted/50 w-full">
+            <div className="container px-6 mx-auto">
+              <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
+                Características principales
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <FeatureCard
+                    icon={<UserCircle2 className="h-10 w-10" />}
+                    title="Mis Cuentas"
+                    description="Almacena y gestiona todas tus cuentas bancarias en un solo lugar. Organízalas por banco, tipo de cuenta y más."
+                    color="text-blue-600"
+                />
+
+                <FeatureCard
+                    icon={<RefreshCw className="h-10 w-10" />}
+                    title="Otras Cuentas"
+                    description="Guarda cuentas de contactos frecuentes para transferencias rápidas. Comparte tus datos fácilmente mediante QR."
+                    color="text-emerald-600"
+                />
+
+                <FeatureCard
+                    icon={<QrCode className="h-10 w-10" />}
+                    title="Tecnología QR"
+                    description="Comparte tus datos bancarios de forma segura escaneando códigos QR. Sin errores al ingresar datos manualmente."
+                    color="text-purple-600"
+                />
+
+                <FeatureCard
+                    icon={<Shield className="h-10 w-10" />}
+                    title="Seguridad"
+                    description="Tus datos están protegidos con autenticación de usuario. Solo tú puedes acceder a tu información."
+                    color="text-yellow-600"
+                />
+
+                <FeatureCard
+                    icon={<Smartphone className="h-10 w-10" />}
+                    title="Acceso Rápido"
+                    description="Interfaz optimizada para móviles con botones de acción rápida. Accede a tus datos en cualquier momento."
+                    color="text-red-600"
+                />
+
+                <FeatureCard
+                    icon={<Moon className="h-10 w-10" />}
+                    title="Modo Oscuro"
+                    description="Diseño adaptable a tus preferencias de visualización. Reduce la fatiga visual en condiciones de poca luz."
+                    color="text-indigo-600"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* How It Works Section */}
+          <section id="how-it-works" className="py-20 w-full">
+            <div className="container px-6 mx-auto">
+              <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
+                Cómo funciona BanQR
+              </h2>
+
+              <StepSection
+                  step={1}
+                  title="Agrega tus cuentas"
+                  description="Registra fácilmente tus cuentas bancarias con todos los detalles necesarios: nombre, RUT, banco, tipo de cuenta y número."
+                  items={[
+                    "Cuentas vista, corriente o ahorro",
+                    "Agrega alias para identificarlas fácilmente",
+                    "Organiza por bancos y tipos"
+                  ]}
+                  color="bg-blue-600"
+                  reverse={false}
               />
-              Learn
-            </a>
-            <a
-                className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-                href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-              <Image
-                  aria-hidden
-                  src="/window.svg"
-                  alt="Window icon"
-                  width={16}
-                  height={16}
+
+              <StepSection
+                  step={2}
+                  title="Comparte con QR"
+                  description="Genera códigos QR para cada una de tus cuentas y compártelos de forma segura con quien necesites."
+                  items={[
+                    "Muestra el QR para que otros escaneen",
+                    "Sin errores al ingresar datos manualmente",
+                    "Comparte solo la información necesaria"
+                  ]}
+                  color="bg-emerald-600"
+                  reverse={true}
               />
-              Examples
-            </a>
-            <a
-                className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-                href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-              <Image
-                  aria-hidden
-                  src="/globe.svg"
-                  alt="Globe icon"
-                  width={16}
-                  height={16}
+
+              <StepSection
+                  step={3}
+                  title="Importa cuentas externas"
+                  description="Escanea códigos QR de otras personas para guardar sus datos bancarios de forma rápida y sin errores."
+                  items={[
+                    "Guarda cuentas de contactos frecuentes",
+                    "Acceso rápido para futuras transferencias",
+                    "Organiza por nombre o relación"
+                  ]}
+                  color="bg-purple-600"
+                  reverse={false}
               />
-              Go to nextjs.org →
-            </a>
-          </footer>
+            </div>
+          </section>
+
+          {/* CTA Section */}
+          <section className="py-20 bg-primary text-primary-foreground w-full">
+            <div className="container px-6 text-center mx-auto">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Simplifica tu vida bancaria</h2>
+              <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+                Únete a BanQR hoy y olvídate de los errores al compartir tus datos bancarios
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <Button variant="secondary" className="px-8 py-6 text-lg">
+                  Crear cuenta gratis
+                </Button>
+                <Button variant="outline" className="border-2 border-white hover:bg-white/10 px-8 py-6 text-lg">
+                  Ver demostración
+                </Button>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        {/* Footer */}
+        <footer className="bg-background border-t w-full">
+          <div className="container px-6 py-12 mx-auto">
+            <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center mt-12">
+              <p className="text-muted-foreground mb-4 md:mb-0">
+                © 2023 BanQR. Todos los derechos reservados.
+              </p>
+            </div>
+          </div>
+        </footer>
+      </div>
+  );
+}
+
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  color: string;
+}
+
+function FeatureCard({ icon, title, description, color }: FeatureCardProps) {
+  return (
+      <Card className="hover:shadow-lg transition-shadow duration-300">
+        <CardHeader>
+          <div className={`${color} mb-4`}>
+            {icon}
+          </div>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">{description}</p>
+        </CardContent>
+      </Card>
+  );
+}
+
+interface StepSectionProps {
+  step: number;
+  title: string;
+  description: string;
+  items: string[];
+  color: string;
+  reverse: boolean;
+}
+
+function StepSection({ step, title, description, items, color, reverse }: StepSectionProps) {
+  return (
+      <div className={`flex flex-col md:flex-row items-center gap-12 mb-16 ${reverse ? 'md:flex-row-reverse' : ''}`}>
+        <div className="md:w-1/2">
+          <div className={`${color} text-white mb-4 rounded-full w-12 h-12 flex items-center justify-center text-2xl font-bold`}>
+            {step}
+          </div>
+          <h3 className="text-2xl font-semibold mb-4">{title}</h3>
+          <p className="text-muted-foreground mb-4">
+            {description}
+          </p>
+          <ul className="text-muted-foreground space-y-2">
+            {items.map((item, index) => (
+                <li key={index} className="flex items-start">
+                  <span className="text-green-500 mt-1 mr-2">✓</span>
+                  <span>{item}</span>
+                </li>
+            ))}
+          </ul>
         </div>
-      </>
+        <div className="md:w-1/2">
+          <div className="bg-muted rounded-xl shadow-lg w-full h-64 flex items-center justify-center">
+            <span className="text-muted-foreground">Step {step} Illustration</span>
+          </div>
+        </div>
+      </div>
   );
 }
