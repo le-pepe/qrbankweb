@@ -232,8 +232,8 @@ export default function HomePage() {
                                                         size="sm"
                                                     >
                                                         {isDeletingId === account.id &&
-                                                            <Loader2 className="animate-spin" size={16}/>}
-                                                        <Trash2 size={16}/>
+                                                            <Loader2 className="animate-spin size-4"/>}
+                                                        <Trash2 className="size-4"/>
                                                         Eliminar
                                                     </Button>
                                                     <Button
@@ -242,7 +242,7 @@ export default function HomePage() {
                                                         size="sm"
                                                         className="dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
                                                     >
-                                                        <Eye className="size-4 mr-2"/>
+                                                        <Eye className="size-4"/>
                                                         Ver QR
                                                     </Button>
 
@@ -305,6 +305,15 @@ export default function HomePage() {
                                         </CardContent>
                                         <CardFooter className="flex justify-end pt-4 gap-2">
                                             <Button
+                                                onClick={() => setSelectedAccount(account)}
+                                                variant="outline"
+                                                size="sm"
+                                                className="dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+                                            >
+                                                <Eye className="size-4"/>
+                                                Ver QR
+                                            </Button>
+                                            <Button
                                                 variant="destructive"
                                                 className="flex gap-2 items-center"
                                                 disabled={isDeletingId === account.id}
@@ -313,8 +322,8 @@ export default function HomePage() {
                                                 size="sm"
                                             >
                                                 {isDeletingId === account.id &&
-                                                    <Loader2 className="animate-spin" size={16}/>}
-                                                <Trash2 size={16}/>
+                                                    <Loader2 className="animate-spin size-4" />}
+                                                <Trash2 className="size-4" />
                                                 Eliminar
                                             </Button>
                                             <Button
