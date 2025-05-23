@@ -15,6 +15,7 @@ import ShowAccountQr from "@/components/modal/ShowAccountQr";
 import {deleteOwnAccountById, getExternalAccounts, getOwnAccounts} from "@/lib/actions";
 import {toast} from "sonner";
 import Link from "next/link";
+import {useDevices} from "@yudiel/react-qr-scanner";
 
 
 export interface Account {
@@ -43,6 +44,8 @@ export default function HomePage() {
     const [isDeletingId, setIsDeletingId] = useState<number | null>(null);
     const [showScanQrModal, setShowScanQrModal] = useState<boolean>(false);
 
+    const devices = useDevices()
+
     useEffect(() => {
         Promise.all([getOwnAccounts(), getExternalAccounts()]).then(
             ([own, external]) => {
@@ -51,6 +54,7 @@ export default function HomePage() {
             }
         ).finally(() => setIsLoading(false));
     }, []);
+
 
     function handleDeleteAccount(id: number) {
         setIsDeletingId(id)
