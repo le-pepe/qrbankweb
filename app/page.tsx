@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from 'react';
-import { FilePlus2, UploadCloud, UserCircle2, RefreshCw, QrCode, Shield, Smartphone, Moon } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ModeToggle } from "@/components/ModeToggle";
+import {useState} from 'react';
+import {Moon, QrCode, RefreshCw, Shield, Smartphone, UserCircle2} from 'lucide-react';
+import {Button} from "@/components/ui/button";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {ModeToggle} from "@/components/ModeToggle";
 import {SignedIn, SignedOut, SignInButton, SignUpButton, UserButton} from "@clerk/nextjs";
 import Link from "next/link";
 
