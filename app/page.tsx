@@ -1,7 +1,7 @@
 "use client";
 
 import {useState} from 'react';
-import {Moon, QrCode, RefreshCw, Shield, Smartphone, UserCircle2} from 'lucide-react';
+import {Menu, Moon, QrCode, RefreshCw, Shield, Smartphone, UserCircle2, X} from 'lucide-react';
 import {Button} from "@/components/ui/button";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {ModeToggle} from "@/components/ModeToggle";
@@ -10,6 +10,7 @@ import Link from "next/link";
 
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState("features");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
       <div className="min-h-screen flex flex-col w-full">
@@ -24,7 +25,8 @@ export default function LandingPage() {
                 </Link>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            {/* Desktop Menu */}
+            <div className="hidden md:flex items-center space-x-4">
               <Button variant="ghost" asChild>
                 <Link href="/#features">Características</Link>
               </Button>
@@ -44,7 +46,40 @@ export default function LandingPage() {
                 <UserButton/>
               </SignedIn>
             </div>
+            {/* Mobile Menu Button */}
+            <div className="md:hidden flex items-center">
+              <ModeToggle />
+              <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="ml-2">
+                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
+            </div>
           </div>
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden bg-background border-t">
+              <div className="flex flex-col items-center space-y-2 py-4">
+                <Button variant="ghost" asChild onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link href="/#features">Características</Link>
+                </Button>
+                <Button variant="ghost" asChild onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link href="/#how-it-works">Cómo funciona</Link>
+                </Button>
+                <SignedOut>
+                  <SignInButton>
+                    <Button className="w-full max-w-xs" onClick={() => setIsMobileMenuOpen(false)}>Iniciar Sesión</Button>
+                  </SignInButton>
+                  <SignUpButton>
+                    <Button variant="secondary" className="w-full max-w-xs" onClick={() => setIsMobileMenuOpen(false)}>Crear cuenta</Button>
+                  </SignUpButton>
+                </SignedOut>
+                <SignedIn>
+                  <div className="w-full flex justify-center">
+                    <UserButton afterSignOutUrl="/"/>
+                  </div>
+                </SignedIn>
+              </div>
+            </div>
+          )}
         </nav>
 
         {/* Hero Section */}
@@ -178,11 +213,14 @@ export default function LandingPage() {
                 Únete a BanQR hoy y olvídate de los errores al compartir tus datos bancarios
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Button variant="secondary" className="px-8 py-6 text-lg">
-                  Crear cuenta gratis
-                </Button>
-                <Button variant="outline" className="border-2 border-white hover:bg-white/10 px-8 py-6 text-lg">
-                  Ver demostración
+                <SignUpButton>
+                    <Button variant="secondary" className="px-8 py-6 text-lg">
+                      Crear cuenta gratis
+                    </Button>
+                </SignUpButton>
+                <Button variant="outline" className="border-2 border-white hover:bg-white/10 px-8 py-6 text-lg" asChild>
+                  {/* Podrías enlazar esto a una sección de demostración o una página modal */}
+                  <Link href="/#how-it-works">Ver demostración</Link>
                 </Button>
               </div>
             </div>
@@ -192,10 +230,16 @@ export default function LandingPage() {
         {/* Footer */}
         <footer className="bg-background border-t w-full">
           <div className="container px-6 py-12 mx-auto">
-            <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center mt-12">
+            {/* He eliminado un div redundante y ajustado el margen superior */}
+            <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center">
               <p className="text-muted-foreground mb-4 md:mb-0">
-                © 2023 BanQR. Todos los derechos reservados.
+                © {new Date().getFullYear()} BanQR. Todos los derechos reservados.
               </p>
+              {/* Podrías añadir enlaces al pie de página aquí si es necesario */}
+              {/* <div className="flex space-x-4">
+                <Link href="/privacy" className="text-muted-foreground hover:text-primary">Privacidad</Link>
+                <Link href="/terms" className="text-muted-foreground hover:text-primary">Términos</Link>
+              </div> */}
             </div>
           </div>
         </footer>

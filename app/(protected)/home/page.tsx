@@ -57,32 +57,62 @@ export default function HomePage() {
 
 
     function handleDeleteAccount(id: number) {
-        setIsDeletingId(id)
+        setIsDeletingId(id);
         deleteOwnAccountById(id)
             .then(() => {
-                setIsLoading(true)
-                getOwnAccounts().then(setMyAccounts).finally(() => setIsLoading(false))
-                getExternalAccounts().then(setExternalAccounts).finally(() => setIsLoading(false))
+                toast.success("Cuenta eliminada correctamente");
+                setIsLoading(true);
+                // Solo recargar las cuentas propias
+                getOwnAccounts()
+                    .then(setMyAccounts)
+                    .catch(err => {
+                        console.error("Error al recargar cuentas propias:", err);
+                        toast.error("Error al recargar tus cuentas.");
+                    })
+                    .finally(() => setIsLoading(false));
+                getExternalAccounts()
+                    .then(setExternalAccounts)
+                    .catch(err => {
+                        console.error("Error al recargar cuentas externas:", err);
+                        toast.error("Error al recargar tus cuentas externas.");
+                    })
+                    .finally(() => setIsLoading(false));
             })
             .catch(err => {
-                console.error(err)
+                console.error("Error al eliminar la cuenta:", err);
+                toast.error("Error al eliminar la cuenta.");
             })
             .finally(() => {
-                setIsDeletingId(null)
-                setShowConfirmDelete(null)
-            })
+                // Asegurarse de que los estados del modal y de eliminación se limpien
+                setIsDeletingId(null);
+                setShowConfirmDelete(null);
+            });
     }
 
     function handleAddAccount() {
         toast.success("Cuenta agregada correctamente");
-        setIsLoading(true)
-        getOwnAccounts().then(setMyAccounts).finally(() => setIsLoading(false))
-        setShowAddAccountModal(false)
+        setShowAddAccountModal(false); // Cerrar modal inmediatamente
+        setIsLoading(true); // Indicar carga
+        getOwnAccounts()
+            .then(setMyAccounts)
+            .catch(err => {
+                console.error("Error al recargar cuentas propias tras agregar:", err);
+                toast.error("Error al actualizar la lista de cuentas.");
+            })
+            .finally(() => setIsLoading(false));
     }
 
     function handleScanSaveAction() {
-        setIsLoading(true)
-        getExternalAccounts().then(setExternalAccounts).finally(() => setIsLoading(false))
+        // Esta función se llama después de que el modal ScanQR completa la acción de guardado.
+        toast.success("Cuenta externa guardada correctamente"); // Añadir feedback
+        setIsLoading(true);
+        getExternalAccounts()
+            .then(setExternalAccounts)
+            .catch(err => {
+                console.error("Error al recargar cuentas externas:", err);
+                toast.error("Error al actualizar la lista de cuentas externas."); // Añadir manejo de error
+            })
+            .finally(() => setIsLoading(false));
     }
 
     function copyToClipboard(account: Account) {
@@ -188,90 +218,77 @@ export default function HomePage() {
 
                     {/* Contenido de la Pestaña "Mis Datos Propios" */}
                     <TabsContent value="myAccounts">
-                        <div className="space-y-4"> {/* Usamos space-y para espaciar las tarjetas verticalmente */}
+                        <div className="space-y-4">
                             {isLoading
-                                ? Array.from({length: 1}).map((_, i) => <AccountCardSkeleton key={i}/>)
+                                // Mostrar esqueletos basados en el número de cuentas existentes si ya se cargaron una vez, o 1 por defecto
+                                ? Array.from({length: myAccounts.length > 0 && !isLoading ? myAccounts.length : 1}).map((_, i) => <AccountCardSkeleton key={i}/>)
                                 : myAccounts.length > 0
                                     ? myAccounts.map((account) => (
-                                            <Card
-                                                key={account.id}
-                                                className="w-full shadow-md hover:shadow-lg transition-shadow duration-300 dark:bg-gray-800"
-                                            >
-                                                <CardHeader>
-                                                    <CardTitle className="text-lg text-blue-600 dark:text-blue-400">
-                                                        {account.name}
-                                                    </CardTitle>
-                                                    <CardDescription
-                                                        className="text-sm text-gray-600 dark:text-gray-400">
-                                                        {account.bank} • {account.accountType}
-                                                    </CardDescription>
-                                                </CardHeader>
-
-                                                <CardContent className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                                        <Card
+                                            key={account.id}
+                                            className="w-full shadow-md hover:shadow-lg transition-shadow duration-300 dark:bg-gray-800"
+                                        >
+                                            <CardHeader>
+                                                <CardTitle className="text-lg text-blue-600 dark:text-blue-400">
+                                                    {account.name}
+                                                </CardTitle>
+                                                <CardDescription
+                                                    className="text-sm text-gray-600 dark:text-gray-400">
+                                                    {account.bank} • {account.accountType}
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                                                <div>
+                                                    <strong>N° Cuenta:</strong> {account.accountNumber}
+                                                </div>
+                                                {account.alias && (
                                                     <div>
-                                                        <strong>N° Cuenta:</strong> {account.accountNumber}
+                                                        <strong>Alias:</strong> {account.alias}
                                                     </div>
-                                                    {account.alias && (
-                                                        <div>
-                                                            <strong>Alias:</strong> {account.alias}
-                                                        </div>
-                                                    )}
+                                                )}
+                                                <div>
+                                                    <strong>RUT:</strong> {account.rut}
+                                                </div>
+                                                {account.email && (
                                                     <div>
-                                                        <strong>RUT:</strong> {account.rut}
+                                                        <strong>Email:</strong> {account.email}
                                                     </div>
-                                                    {account.email && (
-                                                        <div>
-                                                            <strong>Email:</strong> {account.email}
-                                                        </div>
+                                                )}
+                                            </CardContent>
+                                            <CardFooter className="flex gap-2 justify-end pt-4">
+                                                <Button variant="outline" size="sm" onClick={() => setSelectedAccount(account)}>
+                                                    <QrCode className="h-4 w-4"/> Mostrar QR
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => setShowConfirmDelete(account.id)}
+                                                    disabled={isDeletingId === account.id}
+                                                >
+                                                    {isDeletingId === account.id ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin"/>
+                                                    ) : (
+                                                        <Trash2 className="h-4 w-4"/>
                                                     )}
-                                                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                                                        Creado:{" "}
-                                                        {new Date(account.created_at).toLocaleDateString("es-CL", {
-                                                            year: "numeric",
-                                                            month: "short",
-                                                            day: "numeric",
-                                                        })}
-                                                    </p>
-                                                </CardContent>
-
-                                                <CardFooter className="flex justify-end pt-4 gap-2">
-                                                    <Button
-                                                        variant="destructive"
-                                                        className="flex gap-2 items-center"
-                                                        disabled={isDeletingId === account.id}
-                                                        onClick={() => setShowConfirmDelete(account.id)}
-                                                        title="Eliminar cuenta"
-
-                                                        size="sm"
-                                                    >
-                                                        {isDeletingId === account.id &&
-                                                            <Loader2 className="animate-spin size-4"/>}
-                                                        <Trash2 className="size-4"/>
-                                                        Eliminar
-                                                    </Button>
-                                                    <Button
-                                                        onClick={() => setSelectedAccount(account)}
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
-                                                    >
-                                                        <Eye className="size-4"/>
-                                                        Ver QR
-                                                    </Button>
-
-                                                </CardFooter>
-                                            </Card>
-                                        )
-                                    ) : (
-                                        <div className="text-center py-10">
-                                            <p className="text-gray-500 dark:text-gray-400">No tienes datos propios
-                                                todavía.</p>
-                                            <Button
-                                                className="mt-4" variant="outline">
-                                                <FilePlus2 className="mr-2 h-4 w-4"/> Crear mi primer dato
-                                            </Button>
+                                                    Eliminar
+                                                </Button>
+                                            </CardFooter>
+                                        </Card>
+                                    ))
+                                    : (
+                                        <div className="text-center py-10 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700">
+                                            <FilePlus2 className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+                                            <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-gray-100">No tienes cuentas propias</h3>
+                                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Agrega tu primera cuenta para empezar a gestionarla y compartirla.</p>
+                                            <div className="mt-6">
+                                                <Button onClick={() => setShowAddAccountModal(true)}>
+                                                    <FilePlus2 className="mr-2 h-4 w-4"/>
+                                                    Agregar Mi Cuenta
+                                                </Button>
+                                            </div>
                                         </div>
-                                    )}
+                                    )
+                            }
                         </div>
                     </TabsContent>
 
